@@ -1,0 +1,1249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P90X Tracker</title>
+<style>
+:root{--bg:#0d1117;--bg2:#161b22;--bg3:#1c2333;--bg4:#252d3a;--border:#30363d;--fg:#e6edf3;--muted:#8b949e;--cyan:#58d6a8;--orange:#f0883e;--red:#f85149;--blue:#58a6ff;--purple:#bc8cff;--yellow:#e3b341;--green:#3fb950;--t1:#00e676;--t2:#58d6a8;--t3:#e3b341;--phase1:#f85149;--phase2:#f0883e;--phase3:#58a6ff}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:13px;min-height:100vh}
+a{color:var(--cyan);text-decoration:none}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+
+/* Layout */
+.header{background:linear-gradient(135deg,#1a1a2e,#16213e,#0f3460);padding:14px 24px;display:flex;align-items:center;gap:16px;border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+.logo{font-size:22px;font-weight:800;background:linear-gradient(135deg,var(--phase1),var(--orange),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-sub{font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.tabs{display:flex;gap:2px;margin-left:auto}
+.tab{padding:8px 16px;border-radius:6px 6px 0 0;cursor:pointer;font-size:11px;font-weight:600;color:var(--muted);transition:all .15s;border:1px solid transparent;border-bottom:none}
+.tab:hover{color:var(--fg);background:var(--bg2)}
+.tab.active{color:var(--cyan);background:var(--bg2);border-color:var(--border)}
+.main{max-width:1400px;margin:0 auto;padding:20px}
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--cyan);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:900px){.grid2,.grid3,.grid4{grid-template-columns:1fr}}
+
+/* KPI */
+.kpi-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.kpi{flex:1;min-width:140px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.kpi .val{font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--cyan),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.kpi .label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+.kpi.fire .val{background:linear-gradient(135deg,var(--orange),var(--red));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* Forms */
+input,select,textarea{background:var(--bg3);border:1px solid var(--border);color:var(--fg);border-radius:4px;padding:6px 10px;font-size:12px;font-family:inherit}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--cyan)}
+input[type=number]{width:80px}
+input[type=date]{width:140px}
+label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px}
+.form-row{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-bottom:10px}
+.form-group{display:flex;flex-direction:column}
+button,.btn{background:linear-gradient(135deg,#1a6b4a,#0d9668);color:#fff;border:none;padding:8px 18px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.5px}
+button:hover,.btn:hover{filter:brightness(1.2);transform:translateY(-1px)}
+.btn-sm{padding:5px 12px;font-size:10px}
+.btn-danger{background:linear-gradient(135deg,#8b2020,#c03030)}
+.btn-blue{background:linear-gradient(135deg,#1a4a8b,#2060c0)}
+.btn-orange{background:linear-gradient(135deg,#8b5a1a,#c07020)}
+
+/* Schedule Calendar */
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal-header{font-size:10px;font-weight:700;color:var(--muted);text-align:center;padding:6px;text-transform:uppercase}
+.cal-day{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px;min-height:80px;cursor:pointer;transition:all .15s;position:relative}
+.cal-day:hover{border-color:var(--cyan);transform:translateY(-1px)}
+.cal-day.today{border-color:var(--cyan);box-shadow:0 0 8px rgba(88,214,168,.2)}
+.cal-day.done{border-color:var(--green);background:rgba(63,185,80,.05)}
+.cal-day.rest{opacity:.6}
+.cal-day .day-num{font-size:10px;font-weight:700;color:var(--muted)}
+.cal-day .day-workout{font-size:9px;color:var(--fg);margin-top:4px;line-height:1.3}
+.cal-day .day-phase{font-size:7px;color:var(--orange);text-transform:uppercase;letter-spacing:.3px;margin-top:2px}
+.cal-day .check{position:absolute;top:4px;right:6px;font-size:12px}
+.phase-bar{display:flex;height:6px;border-radius:3px;overflow:hidden;margin-bottom:12px}
+.phase-bar div{height:100%}
+
+/* Workout Logger */
+.wo-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.wo-name{font-size:18px;font-weight:800}
+.wo-badge{padding:3px 10px;border-radius:12px;font-size:9px;font-weight:700;text-transform:uppercase}
+.ex-table{width:100%;border-collapse:collapse}
+.ex-table th{text-align:left;padding:8px;font-size:10px;color:var(--muted);border-bottom:2px solid var(--border);text-transform:uppercase}
+.ex-table td{padding:6px 8px;border-bottom:1px solid var(--border);font-size:12px}
+.ex-table tr:hover{background:var(--bg3)}
+.ex-num{color:var(--orange);font-weight:700;width:30px}
+.ex-name{font-weight:600}
+.ex-input{width:60px;text-align:center;padding:4px}
+.ex-input.weight{background:rgba(240,136,62,.08);border-color:rgba(240,136,62,.3)}
+.ex-note{width:100%;margin-top:4px}
+.completion-check{display:flex;align-items:center;gap:8px;font-size:12px;padding:12px;background:var(--bg3);border-radius:6px;cursor:pointer}
+.completion-check input{accent-color:var(--green);width:18px;height:18px;cursor:pointer}
+
+/* Measurements */
+.meas-grid{display:grid;grid-template-columns:160px repeat(auto-fill,minmax(80px,1fr));gap:1px;background:var(--border);border-radius:6px;overflow:hidden}
+.meas-cell{background:var(--bg2);padding:8px;font-size:11px}
+.meas-cell.header{background:var(--bg3);font-weight:700;color:var(--muted);text-transform:uppercase;font-size:9px}
+.meas-cell.label{font-weight:600;color:var(--fg)}
+.meas-cell input{width:100%;background:transparent;border:none;color:var(--fg);text-align:center;font-size:12px;padding:2px}
+.meas-cell input:focus{outline:none;background:rgba(88,214,168,.05)}
+
+/* Charts */
+.chart-wrap{background:var(--bg3);border-radius:6px;padding:12px;margin-bottom:12px}
+.chart-title{font-size:10px;font-weight:700;color:var(--muted);margin-bottom:8px;text-transform:uppercase}
+
+/* Nutrition */
+.portion-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px}
+.portion-card{background:var(--bg3);border-radius:6px;padding:12px;text-align:center;border:1px solid var(--border)}
+.portion-card .p-icon{font-size:24px;margin-bottom:4px}
+.portion-card .p-name{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.portion-card .p-target{font-size:20px;font-weight:800;color:var(--cyan)}
+.portion-card .p-actual{margin-top:4px}
+.portion-card .p-actual input{width:50px;text-align:center;font-size:16px;font-weight:700}
+
+/* Progress */
+.progress-ring{display:inline-block;position:relative;width:80px;height:80px}
+.progress-ring svg{transform:rotate(-90deg)}
+.progress-ring .pct{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800}
+
+/* Archive */
+.archive-entry{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px;margin-bottom:8px;display:flex;align-items:center;gap:14px}
+.archive-entry .a-name{font-weight:700;font-size:14px}
+.archive-entry .a-meta{font-size:10px;color:var(--muted)}
+.archive-entry .a-actions{margin-left:auto;display:flex;gap:6px}
+
+/* Status */
+.status-ok{color:var(--green)}
+.status-warn{color:var(--orange)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--bg2);border:1px solid var(--green);color:var(--green);padding:10px 18px;border-radius:8px;font-size:12px;font-weight:600;z-index:999;animation:fadeIn .3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* Week selector */
+.week-sel{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.week-btn{padding:4px 10px;border-radius:4px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--bg3);color:var(--muted);transition:all .15s}
+.week-btn:hover{border-color:var(--cyan);color:var(--fg)}
+.week-btn.active{background:var(--cyan);color:var(--bg);border-color:var(--cyan)}
+.week-btn.p1{border-left:3px solid var(--phase1)}
+.week-btn.p2{border-left:3px solid var(--phase2)}
+.week-btn.p3{border-left:3px solid var(--phase3)}
+.week-btn.rec{border-left:3px solid var(--purple)}
+
+/* Hide all tab content by default */
+.tab-content{display:none}
+.tab-content.active{display:block}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">P90X TRACKER</div>
+    <div class="logo-sub">Bring It!</div>
+  </div>
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('dashboard')">Dashboard</div>
+    <div class="tab" onclick="switchTab('calendar')">Calendar</div>
+    <div class="tab" onclick="switchTab('workout')">Workouts</div>
+    <div class="tab" onclick="switchTab('body')">Body</div>
+    <div class="tab" onclick="switchTab('fittest')">Fit Test</div>
+    <div class="tab" onclick="switchTab('nutrition')">Nutrition</div>
+    <div class="tab" onclick="switchTab('analytics')">Analytics</div>
+    <div class="tab" onclick="switchTab('archive')">Archive</div>
+  </div>
+</div>
+
+<div class="main" id="app"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// P90X COMPLETE PROGRAM DATA
+// ═══════════════════════════════════════════════════════════════════════
+
+const WORKOUT_TYPES = {
+  chest_back:{name:'Chest & Back',icon:'💪',duration:52,category:'Resistance',
+    exercises:[
+      {n:'Standard Push-Ups',type:'pushup'},{n:'Wide Front Pull-Ups',type:'pullup'},
+      {n:'Military Push-Ups',type:'pushup'},{n:'Reverse Grip Chin-Ups',type:'pullup'},
+      {n:'Wide Fly Push-Ups',type:'pushup'},{n:'Closed Grip Overhand Pull-Ups',type:'pullup'},
+      {n:'Decline Push-Ups',type:'pushup'},{n:'Heavy Pants',type:'rw'},
+      {n:'Diamond Push-Ups',type:'pushup'},{n:'Lawnmowers',type:'rw'},
+      {n:'Dive-Bomber Push-Ups',type:'pushup'},{n:'Back Flys',type:'rw'}
+    ]},
+  plyometrics:{name:'Plyometrics',icon:'🔥',duration:58,category:'Cardio',
+    exercises:[
+      {n:'Jump Squats',type:'r'},{n:'Run Stance Squats',type:'r'},
+      {n:'Airborne Heisman',type:'r'},{n:'Swing Kicks',type:'r'},
+      {n:'Squat Reach Jumps',type:'r'},{n:'Run Stance Squat Switch Pick-Ups',type:'r'},
+      {n:'Double Airborne Heisman',type:'r'},{n:'Circle Run',type:'r'},
+      {n:'Jump Knee Tucks',type:'r'},{n:'Mary Katherine Lunges',type:'r'},
+      {n:'Leapfrog Squats',type:'r'},{n:'Twist Combos',type:'r'},
+      {n:'Rock Star Hops',type:'r'},{n:'Gap Jumps',type:'r'},
+      {n:'Squat Jacks',type:'r'},{n:'Military March',type:'r'},
+      {n:'Run Squat 180 Jump Switch',type:'r'},{n:'Lateral Leapfrog Squat',type:'r'},
+      {n:'Monster Truck Tire',type:'r'},{n:'Hot Foot',type:'r'},
+      {n:'Pitch & Catch',type:'r'},{n:'Jump Shots',type:'r'},
+      {n:'Football Hero',type:'r'},{n:'Overtime',type:'r'},
+      {n:'Wacky Jacks',type:'r'},{n:'Surge Frog Reverse Frog',type:'r'},
+      {n:'Power Jacks',type:'r'},{n:'Squat Lunge Tires',type:'r'},
+      {n:'Flight of the Warrior Lurches',type:'r'},{n:'Globe Jumps',type:'r'}
+    ]},
+  shoulders_arms:{name:'Shoulders & Arms',icon:'🏋️',duration:59,category:'Resistance',
+    exercises:[
+      {n:'Alternating Shoulder Presses',type:'rw'},{n:'In & Out Bicep Curls',type:'rw'},
+      {n:'Two-Arm Tricep Kickbacks',type:'rw'},{n:"Deep Swimmer's Presses",type:'rw'},
+      {n:'Full Supination Concentration Curls',type:'rw'},{n:'Chair Dips',type:'r'},
+      {n:'Upright Rows',type:'rw'},{n:'Static Arm Curls',type:'rw'},
+      {n:'Flip-Grip Twist Tricep Kickbacks',type:'rw'},{n:'Seated Two-Angle Shoulder Flys',type:'rw'},
+      {n:'Crouching Cohen Curls',type:'rw'},{n:'Lying-Down Tricep Extensions',type:'rw'},
+      {n:'In & Out Strait Arm Shoulder Flys',type:'rw',bonus:true},{n:'Congdon Curls',type:'rw',bonus:true},
+      {n:'Side Tri-Rises',type:'lr',bonus:true}
+    ]},
+  yoga:{name:'Yoga X',icon:'🧘',duration:92,category:'Flexibility',exercises:[]},
+  legs_back:{name:'Legs & Back',icon:'🦵',duration:58,category:'Resistance',
+    exercises:[
+      {n:'Balance Lunge',type:'lr'},{n:'Calf Raise Squat',type:'rw'},
+      {n:'Reverse Grip Chin-Ups',type:'pullup'},{n:'Super Skater',type:'lr'},
+      {n:'Wall Squat',type:'time'},{n:'Wide Front Pull-Ups',type:'pullup'},
+      {n:'Step Back Lunge',type:'lrw'},{n:'Alternating Side Lunge',type:'rw'},
+      {n:'Closed Grip Overhand Pull-Ups',type:'pullup'},{n:'Single Leg Wall Squat',type:'time'},
+      {n:'Deadlift Squat',type:'lr'},{n:'Switch Grip Pull-Ups',type:'pullup'},
+      {n:'Three-Way Lunge',type:'lr'},{n:'Sneaky Lunge',type:'r'},
+      {n:'Chair Salutations',type:'time'},{n:'Toe-Roll Iso Lunge',type:'lr'},
+      {n:'Groucho Walk',type:'r'},{n:'Calf Raises',type:'rw'},
+      {n:'80/20 Cyber-Speed Squat',type:'lr'}
+    ]},
+  kenpo:{name:'Kenpo X',icon:'🥊',duration:58,category:'Cardio',exercises:[]},
+  cardio:{name:'Cardio X',icon:'❤️',duration:43,category:'Cardio',exercises:[]},
+  core:{name:'Core Synergistics',icon:'🎯',duration:57,category:'Resistance',
+    exercises:[
+      {n:'Stack Foot/Stagger Hands Push-Ups',type:'pushup'},{n:'Banana Rolls',type:'r'},
+      {n:'Leaning Crescent Lunges',type:'rw'},{n:'Squat Run',type:'rw'},
+      {n:'Sphinx Push-Ups',type:'pushup'},{n:'Bow To Boat',type:'r'},
+      {n:'Low Lateral Skaters',type:'rw'},{n:'Lunge & Reach',type:'rw'},
+      {n:'Prison Cell Push-Ups',type:'pushup'},{n:'Side Hip Raise',type:'lr'},
+      {n:'Squat X-Press',type:'rw'},{n:'Plank To Chaturanga Run',type:'r'},
+      {n:'Walking Push-Ups',type:'pushup'},{n:'Superman Banana',type:'r'},
+      {n:'Lunge-Kickback-Curl-Press',type:'rw'},{n:'Towel Hopping',type:'r'},
+      {n:'Reach High & Under Push-Ups',type:'pushup'},{n:'Steam Engine',type:'r'},
+      {n:'Dreya Roll',type:'r'},
+      {n:'Plank To Chaturanga Iso',type:'r',bonus:true},{n:'The Halfback',type:'r',bonus:true},
+      {n:'Table Dip Leg Raise',type:'r',bonus:true}
+    ]},
+  chest_shoulders_triceps:{name:'Chest, Shoulders & Triceps',icon:'🔱',duration:55,category:'Resistance',
+    exercises:[
+      {n:'Slow-Motion 3-in-1 Push-Ups',type:'r'},{n:'In & Out Shoulder Flys',type:'rw'},
+      {n:'Chair Dips',type:'r'},{n:'Plange Push-Ups',type:'pushup'},
+      {n:'Pike Presses',type:'r'},{n:'Side Tri-Rises',type:'lr'},
+      {n:'Floor Flys',type:'r'},{n:'Scarecrows',type:'rw'},
+      {n:'Overhead Tricep Extensions',type:'rw'},{n:'Two-Twitch Speed Push-Ups',type:'pushup'},
+      {n:'Y-Presses',type:'rw'},{n:'Lying Tricep Extensions',type:'rw'},
+      {n:'Side-To-Side Push-Ups',type:'pushup'},{n:'Pour Flys',type:'rw'},
+      {n:'Side-Leaning Tricep Extensions',type:'lrw'},{n:'One-Arm Push-Ups',type:'r'},
+      {n:'Weighted Circles',type:'rw'},{n:'Throw the Bomb',type:'lrw'},
+      {n:'Clap or Plyo Push-Ups',type:'r'},{n:'Slo-Mo Throws',type:'lrw'},
+      {n:'Front-To-Back Tricep Extensions',type:'lrw'},{n:'One-Arm Balance Push-Ups',type:'r'},
+      {n:'Fly-Row Presses',type:'rw'},{n:'Dumbbell Cross-Body Blows',type:'rw'}
+    ]},
+  back_biceps:{name:'Back & Biceps',icon:'💎',duration:51,category:'Resistance',
+    exercises:[
+      {n:'Wide Front Pull-Ups',type:'pullup'},{n:'Lawnmowers',type:'lrw'},
+      {n:'Twenty-Ones',type:'r'},{n:'One-Arm Cross-Body Curls',type:'lrw'},
+      {n:'Switch Grip Pull-Ups',type:'pullup'},{n:'Elbows-Out Lawnmowers',type:'lrw'},
+      {n:'Standing Bicep Curls',type:'rw'},{n:'One-Arm Concentration Curls',type:'lrw'},
+      {n:'Corn Cob Pull-Ups',type:'pullup'},{n:'Reverse Grip Bent-Over Rows',type:'rw'},
+      {n:'Open Arm Curls',type:'rw'},{n:'Static Arm Curls',type:'rw'},
+      {n:'Towel Pull-Ups',type:'pullup'},{n:'Congdon Locomotives',type:'rw'},
+      {n:'Crouching Cohen Curls',type:'rw'},{n:'One-Arm Corkscrew Curls',type:'rw'},
+      {n:'Chin-Ups',type:'pullup'},{n:'Seated Bent-Over Back Flys',type:'rw'},
+      {n:'Curl-Up/Hammer Downs',type:'rw'},{n:'Hammer Curls',type:'rw'},
+      {n:'Max Rep Pull-Ups',type:'pullup'},{n:'Superman',type:'r'},
+      {n:'In-Out Hammer Curls',type:'rw'},{n:'Strip-Set Curls',type:'strip'}
+    ]},
+  ab_ripper:{name:'Ab Ripper X',icon:'🔥',duration:16,category:'Core',
+    exercises:[
+      {n:'In & Out',type:'r'},{n:'Seated Bicycle',type:'r'},
+      {n:'Seated Crunchy Frog',type:'r'},{n:'Crossed Leg/Wide Leg Sit-Up',type:'r'},
+      {n:'Fifer Scissors',type:'r'},{n:"Hip Rock 'N Raise",type:'r'},
+      {n:'Pulse-Up',type:'r'},{n:'Roll-Up/V-Up Combo',type:'r'},
+      {n:'Oblique V-Up',type:'r'},{n:'Leg Climb',type:'r'},
+      {n:'Mason Twist',type:'r'}
+    ]},
+  xstretch:{name:'X Stretch',icon:'🤸',duration:57,category:'Flexibility',exercises:[]},
+  rest:{name:'Rest Day',icon:'😴',duration:0,category:'Recovery',exercises:[]}
+};
+
+// ── SCHEDULES ──
+// Each week = array of 7 workout keys. '+' means paired (e.g., 'chest_back+ab_ripper')
+const CLASSIC_WEEKS = {
+  1:['chest_back+ab_ripper','plyometrics','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  2:['chest_back+ab_ripper','plyometrics','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  3:['chest_back+ab_ripper','plyometrics','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  4:['yoga','core','kenpo','xstretch','cardio','yoga','rest'],
+  5:['chest_shoulders_triceps+ab_ripper','plyometrics','back_biceps+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  6:['chest_shoulders_triceps+ab_ripper','plyometrics','back_biceps+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  7:['chest_shoulders_triceps+ab_ripper','plyometrics','back_biceps+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  8:['yoga','core','kenpo','xstretch','cardio','yoga','rest'],
+  9:['chest_back+ab_ripper','plyometrics','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  10:['chest_shoulders_triceps+ab_ripper','plyometrics','back_biceps+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  11:['chest_back+ab_ripper','plyometrics','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  12:['chest_shoulders_triceps+ab_ripper','plyometrics','back_biceps+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  13:['yoga','core','kenpo','xstretch','cardio','yoga','rest']
+};
+const LEAN_WEEKS = {
+  1:['core','cardio','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  2:['core','cardio','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  3:['core','cardio','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  4:['yoga','core','kenpo','xstretch','cardio','yoga','rest'],
+  5:['core','cardio','chest_shoulders_triceps+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  6:['core','cardio','chest_shoulders_triceps+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  7:['core','cardio','chest_shoulders_triceps+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  8:['yoga','core','kenpo','xstretch','cardio','yoga','rest'],
+  9:['chest_back+ab_ripper','cardio','shoulders_arms+ab_ripper','yoga','core','kenpo','rest'],
+  10:['chest_shoulders_triceps+ab_ripper','cardio','back_biceps+ab_ripper','yoga','core','kenpo','rest'],
+  11:['chest_back+ab_ripper','cardio','shoulders_arms+ab_ripper','yoga','core','kenpo','rest'],
+  12:['chest_shoulders_triceps+ab_ripper','cardio','back_biceps+ab_ripper','yoga','core','kenpo','rest'],
+  13:['yoga','core','kenpo','xstretch','cardio','yoga','rest']
+};
+const DOUBLES_WEEKS = {
+  1:['chest_back+ab_ripper','plyometrics','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  2:['chest_back+ab_ripper','plyometrics','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  3:['chest_back+ab_ripper','plyometrics','shoulders_arms+ab_ripper','yoga','legs_back+ab_ripper','kenpo','rest'],
+  4:['yoga','core','kenpo','xstretch','cardio','yoga','rest'],
+  5:['chest_shoulders_triceps+ab_ripper','plyometrics+cardio','back_biceps+ab_ripper','yoga+cardio','legs_back+ab_ripper','kenpo+cardio','rest'],
+  6:['chest_shoulders_triceps+ab_ripper','plyometrics+cardio','back_biceps+ab_ripper','yoga+cardio','legs_back+ab_ripper','kenpo+cardio','rest'],
+  7:['chest_shoulders_triceps+ab_ripper','plyometrics+cardio','back_biceps+ab_ripper','yoga+cardio','legs_back+ab_ripper','kenpo+cardio','rest'],
+  8:['yoga','core','kenpo','xstretch','cardio','yoga','rest'],
+  9:['chest_back+ab_ripper','plyometrics+cardio','shoulders_arms+ab_ripper','yoga+cardio','legs_back+ab_ripper','kenpo+cardio','rest'],
+  10:['chest_shoulders_triceps+ab_ripper','plyometrics+cardio','back_biceps+ab_ripper','yoga+cardio','legs_back+ab_ripper','kenpo+cardio','rest'],
+  11:['chest_back+ab_ripper','plyometrics+cardio','shoulders_arms+ab_ripper','yoga+cardio','legs_back+ab_ripper','kenpo+cardio','rest'],
+  12:['chest_shoulders_triceps+ab_ripper','plyometrics+cardio','back_biceps+ab_ripper','yoga+cardio','legs_back+ab_ripper','kenpo+cardio','rest'],
+  13:['yoga','core','kenpo','xstretch','cardio','yoga','rest']
+};
+const SCHEDULES={classic:CLASSIC_WEEKS,lean:LEAN_WEEKS,doubles:DOUBLES_WEEKS};
+
+const PHASES=[
+  {name:'Phase 1: Adaptive',weeks:[1,2,3],color:'var(--phase1)',desc:'Build foundation — learn moves, build muscle memory'},
+  {name:'Recovery',weeks:[4],color:'var(--purple)',desc:'Active recovery — flexibility and core focus'},
+  {name:'Phase 2: Mastery',weeks:[5,6,7],color:'var(--phase2)',desc:'New muscle combinations — increased intensity'},
+  {name:'Recovery',weeks:[8],color:'var(--purple)',desc:'Active recovery week'},
+  {name:'Phase 3: Performance',weeks:[9,10,11,12],color:'var(--phase3)',desc:'Peak performance — mix of Phase 1 & 2 workouts'},
+  {name:'Recovery',weeks:[13],color:'var(--purple)',desc:'Final recovery and victory lap'}
+];
+
+const NUTRITION_PHASES = [
+  {name:'Fat Shredder',weeks:[1,2,3,4],protein:.50,carbs:.30,fat:.20,desc:'High protein to strengthen muscle and shed excess body fat'},
+  {name:'Energy Booster',weeks:[5,6,7,8],protein:.40,carbs:.40,fat:.20,desc:'Balanced approach with additional complex carbs for energy'},
+  {name:'Endurance Maximizer',weeks:[9,10,11,12,13],protein:.20,carbs:.60,fat:.20,desc:'Complex carbs for peak athletic performance and stamina'}
+];
+
+const NUTRITION_LEVELS = {
+  1:{cal:1800,portions:{protein:5,dairy:1,fruit:1,vegetable:2,fat:1,carb:1,snack:1,condiment:1}},
+  2:{cal:2400,portions:{protein:7,dairy:2,fruit:3,vegetable:4,fat:1,carb:2,snack:2,condiment:2}},
+  3:{cal:3000,portions:{protein:9,dairy:4,fruit:2,vegetable:4,fat:1,carb:1,snack:4,condiment:2}}
+};
+
+const PORTION_ICONS = {protein:'🥩',dairy:'🧀',fruit:'🍎',vegetable:'🥦',fat:'🥑',carb:'🍞',snack:'🍫',condiment:'🧂'};
+
+const MEASUREMENTS = ['Neck','Shoulder','Chest','Waist','Abdomen','Hips','Thigh','Knee','Calf','Ankle','Arm','Forearm','Wrist'];
+const FIT_TESTS = [
+  {n:'Pull-Ups',unit:'reps'},{n:'Vertical Leap',unit:'inches'},{n:'Push-Ups',unit:'reps'},
+  {n:'Toe Touch',unit:'inches'},{n:'Wall Squat',unit:'seconds'},{n:'Bicep Curls',unit:'reps'},
+  {n:'Bicep Curl Weight',unit:'lbs'},{n:'In & Outs',unit:'reps'},
+  {n:'Resting Heart Rate',unit:'bpm'},{n:'Heart Rate After 1 min',unit:'bpm'},
+  {n:'Heart Rate After 2 min',unit:'bpm'},{n:'Heart Rate After 4 min',unit:'bpm'}
+];
+
+// ═══════════════════════════════════════════════════════════════════════
+// STATE MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════
+
+const STORAGE_KEY = 'p90x_tracker_v2';
+let STATE = loadState();
+let currentTab = 'dashboard';
+
+function defaultState(){
+  return {
+    setup:{program:'classic',startDate:'',name:'',age:'',height:'',weight:'',bodyFat:'',gender:'male',nutritionLevel:2},
+    schedule:{}, // day index → {done:bool, notes:''}
+    workouts:{}, // 'wo_chest_back_w1' → { exercises: [{r1:10,w1:15,...}], notes:'', done:true, date:'' }
+    body:{}, // 'week_1' → {weight:180, bodyFat:25, measurements:{neck:15,...}}
+    fitTest:{before:{},after:{}},
+    nutrition:{}, // 'week_1_day_1' → {protein:5,dairy:2,...}
+    archives:[]
+  };
+}
+
+function loadState(){
+  try{const s=localStorage.getItem(STORAGE_KEY);return s?JSON.parse(s):defaultState();}
+  catch(e){return defaultState();}
+}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(STATE));}
+
+function getSchedule(){return SCHEDULES[STATE.setup.program]||CLASSIC_WEEKS;}
+function getStartDate(){
+  if(!STATE.setup.startDate)return null;
+  const d=new Date(STATE.setup.startDate+'T00:00:00');
+  return isNaN(d)?null:d;
+}
+function getDayNum(){
+  const s=getStartDate();if(!s)return -1;
+  const now=new Date();now.setHours(0,0,0,0);
+  return Math.floor((now-s)/(86400000));
+}
+function getWeekForDay(d){return Math.floor(d/7)+1;}
+function getPhaseForWeek(w){
+  for(const p of PHASES)if(p.weeks.includes(w))return p;
+  return PHASES[0];
+}
+function getNutritionPhase(w){
+  for(const p of NUTRITION_PHASES)if(p.weeks.includes(w))return p;
+  return NUTRITION_PHASES[0];
+}
+function getWorkoutForDay(dayIdx){
+  const w=getWeekForDay(dayIdx);
+  const sched=getSchedule();
+  const weekSched=sched[w];
+  if(!weekSched)return null;
+  const dow=dayIdx%7;
+  return weekSched[dow]||'rest';
+}
+function parseWorkoutKey(key){
+  return key.split('+').map(k=>{
+    const wt=WORKOUT_TYPES[k];
+    return wt?{key:k,...wt}:{key:k,name:k,icon:'❓',exercises:[]};
+  });
+}
+function countCompleted(){
+  let done=0,total=91;
+  for(let d=0;d<91;d++){
+    const sk=STATE.schedule['day_'+d];
+    if(sk&&sk.done)done++;
+  }
+  return{done,total};
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// RENDERING
+// ═══════════════════════════════════════════════════════════════════════
+
+function switchTab(t){
+  currentTab=t;
+  document.querySelectorAll('.tab').forEach((el,i)=>{
+    el.classList.toggle('active',el.textContent.trim().toLowerCase().replace(/\s/g,'')===t);
+  });
+  render();
+}
+
+function render(){
+  const app=document.getElementById('app');
+  switch(currentTab){
+    case 'dashboard': renderDashboard(app);break;
+    case 'calendar': renderCalendar(app);break;
+    case 'workout': renderWorkoutTab(app);break;
+    case 'body': renderBody(app);break;
+    case 'fittest': renderFitTest(app);break;
+    case 'nutrition': renderNutrition(app);break;
+    case 'analytics': renderAnalytics(app);break;
+    case 'archive': renderArchive(app);break;
+  }
+}
+
+function toast(msg){
+  const d=document.createElement('div');d.className='toast';d.textContent=msg;
+  document.body.appendChild(d);setTimeout(()=>d.remove(),2500);
+}
+
+// ── DASHBOARD ──
+function renderDashboard(el){
+  const start=getStartDate();
+  if(!start||!STATE.setup.startDate){
+    el.innerHTML=`<div class="card" style="text-align:center;padding:60px 20px">
+      <div style="font-size:48px;margin-bottom:20px">🏋️</div>
+      <div style="font-size:22px;font-weight:800;margin-bottom:8px">Welcome to P90X Tracker</div>
+      <div style="color:var(--muted);margin-bottom:24px;max-width:500px;margin-left:auto;margin-right:auto">
+        Set up your program to get started. Choose Classic, Lean, or Doubles and pick your start date.
+      </div>
+      <div class="card" style="max-width:500px;margin:0 auto;text-align:left">
+        <div class="card-title">⚙️ Quick Setup</div>
+        <div class="form-row">
+          <div class="form-group"><label>Your Name</label><input id="s_name" value="${STATE.setup.name||''}" style="width:200px"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Program</label>
+            <select id="s_prog"><option value="classic" ${STATE.setup.program==='classic'?'selected':''}>Classic</option><option value="lean" ${STATE.setup.program==='lean'?'selected':''}>Lean</option><option value="doubles" ${STATE.setup.program==='doubles'?'selected':''}>Doubles</option></select></div>
+          <div class="form-group"><label>Start Date</label><input type="date" id="s_date" value="${STATE.setup.startDate||new Date().toISOString().slice(0,10)}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Age</label><input type="number" id="s_age" value="${STATE.setup.age||''}"></div>
+          <div class="form-group"><label>Gender</label><select id="s_gender"><option value="male" ${STATE.setup.gender==='male'?'selected':''}>Male</option><option value="female" ${STATE.setup.gender==='female'?'selected':''}>Female</option></select></div>
+          <div class="form-group"><label>Height (in)</label><input type="number" id="s_height" value="${STATE.setup.height||''}"></div>
+          <div class="form-group"><label>Weight (lbs)</label><input type="number" id="s_weight" value="${STATE.setup.weight||''}"></div>
+          <div class="form-group"><label>Body Fat %</label><input type="number" id="s_bf" value="${STATE.setup.bodyFat||''}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Nutrition Level</label>
+            <select id="s_nlevel"><option value="1" ${STATE.setup.nutritionLevel==1?'selected':''}>Level I (1,800 cal)</option><option value="2" ${STATE.setup.nutritionLevel==2?'selected':''}>Level II (2,400 cal)</option><option value="3" ${STATE.setup.nutritionLevel==3?'selected':''}>Level III (3,000 cal)</option></select></div>
+        </div>
+        <button onclick="saveSetup()" style="margin-top:12px">🚀 Start P90X</button>
+      </div>
+    </div>`;
+    return;
+  }
+
+  const dayNum=getDayNum();
+  const week=Math.min(Math.max(getWeekForDay(dayNum),1),13);
+  const phase=getPhaseForWeek(week);
+  const comp=countCompleted();
+  const pct=Math.round((comp.done/91)*100);
+  const todayKey=getWorkoutForDay(dayNum);
+  const todayWorkouts=todayKey?parseWorkoutKey(todayKey):[];
+  const todayDone=STATE.schedule['day_'+dayNum]?.done;
+  const dayInWeek=(dayNum%7);
+  const dayNames=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+
+  let todayHtml=todayWorkouts.map(w=>`<span style="margin-right:8px">${w.icon} ${w.name}</span>`).join('');
+  if(dayNum<0)todayHtml='<span style="color:var(--muted)">Program hasn\'t started yet</span>';
+  if(dayNum>90)todayHtml='<span style="color:var(--green)">🎉 Program Complete!</span>';
+
+  // Week overview
+  let weekHtml='';
+  const weekStart=(week-1)*7;
+  for(let d=0;d<7;d++){
+    const di=weekStart+d;
+    const wk=getWorkoutForDay(di);
+    const wos=wk?parseWorkoutKey(wk):[];
+    const done=STATE.schedule['day_'+di]?.done;
+    const isToday=di===dayNum;
+    weekHtml+=`<div style="flex:1;min-width:100px;padding:8px;background:${isToday?'rgba(88,214,168,.1)':'var(--bg3)'};border-radius:6px;border:1px solid ${isToday?'var(--cyan)':done?'var(--green)':'var(--border)'}">
+      <div style="font-size:9px;color:var(--muted);font-weight:700">${dayNames[d]} ${isToday?'(TODAY)':''}</div>
+      <div style="font-size:11px;margin-top:4px">${wos.map(w=>w.icon+' '+w.name).join('<br>')}</div>
+      ${done?'<div style="color:var(--green);font-size:10px;margin-top:4px">✓ Done</div>':''}
+    </div>`;
+  }
+
+  el.innerHTML=`
+    <div class="kpi-row">
+      <div class="kpi"><div class="val">${dayNum<0?'—':Math.min(dayNum+1,91)}</div><div class="label">Day of 91</div></div>
+      <div class="kpi"><div class="val">${week}</div><div class="label">Week of 13</div></div>
+      <div class="kpi"><div class="val">${comp.done}</div><div class="label">Workouts Done</div></div>
+      <div class="kpi fire"><div class="val">${pct}%</div><div class="label">Complete</div></div>
+      <div class="kpi"><div class="val">${STATE.setup.weight||'—'}</div><div class="label">Start Weight</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title" style="color:${phase.color}">${phase.name} — Week ${week}</div>
+      <div style="color:var(--muted);font-size:11px;margin-bottom:12px">${phase.desc}</div>
+      <div class="phase-bar">
+        ${PHASES.map(p=>`<div style="flex:${p.weeks.length};background:${p.color};opacity:${p.weeks.includes(week)?1:0.3}"></div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📅 Today's Workout — Day ${dayNum+1}</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:12px">${todayHtml}</div>
+      ${dayNum>=0&&dayNum<=90&&!todayDone?`<button onclick="markDayDone(${dayNum})">✅ Mark Complete</button> <button class="btn-blue" onclick="openWorkout(${dayNum})" style="margin-left:8px">📝 Log Workout</button>`:''}
+      ${todayDone?'<div style="color:var(--green);font-weight:700">✅ Completed!</div>':''}
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 Week ${week} Overview</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">${weekHtml}</div>
+    </div>
+
+    <div class="card" style="text-align:center">
+      <div class="card-title" style="justify-content:center">🏆 Overall Progress</div>
+      ${renderProgressRing(pct)}
+      <div style="margin-top:8px;color:var(--muted);font-size:11px">${comp.done} of 91 days complete</div>
+    </div>
+  `;
+}
+
+function renderProgressRing(pct){
+  const r=35,c=2*Math.PI*r;
+  const offset=c-(pct/100)*c;
+  const col=pct>=100?'var(--green)':pct>=60?'var(--cyan)':pct>=30?'var(--orange)':'var(--red)';
+  return `<div class="progress-ring"><svg width="80" height="80"><circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--border)" stroke-width="6"/><circle cx="40" cy="40" r="${r}" fill="none" stroke="${col}" stroke-width="6" stroke-dasharray="${c}" stroke-dashoffset="${offset}" stroke-linecap="round"/></svg><div class="pct" style="color:${col}">${pct}%</div></div>`;
+}
+
+function saveSetup(){
+  STATE.setup.name=document.getElementById('s_name')?.value||'';
+  STATE.setup.program=document.getElementById('s_prog')?.value||'classic';
+  STATE.setup.startDate=document.getElementById('s_date')?.value||'';
+  STATE.setup.age=document.getElementById('s_age')?.value||'';
+  STATE.setup.gender=document.getElementById('s_gender')?.value||'male';
+  STATE.setup.height=document.getElementById('s_height')?.value||'';
+  STATE.setup.weight=document.getElementById('s_weight')?.value||'';
+  STATE.setup.bodyFat=document.getElementById('s_bf')?.value||'';
+  STATE.setup.nutritionLevel=parseInt(document.getElementById('s_nlevel')?.value||2);
+  save();toast('✅ Setup saved!');render();
+}
+
+function markDayDone(d){
+  if(!STATE.schedule['day_'+d])STATE.schedule['day_'+d]={};
+  STATE.schedule['day_'+d].done=true;
+  STATE.schedule['day_'+d].completedAt=new Date().toISOString();
+  save();toast('✅ Day '+(d+1)+' complete!');render();
+}
+
+function openWorkout(dayIdx){
+  currentTab='workout';
+  document.querySelectorAll('.tab').forEach(el=>{el.classList.toggle('active',el.textContent.trim()==='Workouts');});
+  render();
+  // Select the right day
+  setTimeout(()=>{
+    const sel=document.getElementById('wo_day_select');
+    if(sel){sel.value=dayIdx;sel.dispatchEvent(new Event('change'));}
+  },50);
+}
+
+// ── CALENDAR ──
+function renderCalendar(el){
+  const start=getStartDate();
+  if(!start){el.innerHTML='<div class="card">Set up your program first on the Dashboard tab.</div>';return;}
+  const dayNum=getDayNum();
+  const sched=getSchedule();
+  let html='<div class="card"><div class="card-title">📅 90-Day Schedule — '+STATE.setup.program.charAt(0).toUpperCase()+STATE.setup.program.slice(1)+'</div>';
+  
+  // Phase legend
+  html+='<div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">';
+  PHASES.forEach(p=>{
+    html+=`<div style="display:flex;align-items:center;gap:4px;font-size:10px"><div style="width:12px;height:12px;border-radius:2px;background:${p.color}"></div>${p.name}</div>`;
+  });
+  html+='</div>';
+
+  for(let w=1;w<=13;w++){
+    const phase=getPhaseForWeek(w);
+    const weekDays=sched[w]||[];
+    html+=`<div style="margin-bottom:16px"><div style="font-size:12px;font-weight:700;color:${phase.color};margin-bottom:6px">Week ${w} — ${phase.name}</div>`;
+    html+='<div class="cal-grid">';
+    ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].forEach(d=>{
+      html+=`<div class="cal-header">${d}</div>`;
+    });
+    for(let d=0;d<7;d++){
+      const dayIdx=(w-1)*7+d;
+      const woKey=weekDays[d]||'rest';
+      const wos=parseWorkoutKey(woKey);
+      const done=STATE.schedule['day_'+dayIdx]?.done;
+      const isToday=dayIdx===dayNum;
+      const isRest=woKey==='rest';
+      html+=`<div class="cal-day${isToday?' today':''}${done?' done':''}${isRest?' rest':''}" onclick="openWorkout(${dayIdx})">
+        <div class="day-num">Day ${dayIdx+1}</div>
+        <div class="day-workout">${wos.map(w=>w.icon+' '+w.name).join('<br>')}</div>
+        ${done?'<div class="check">✅</div>':''}
+      </div>`;
+    }
+    html+='</div></div>';
+  }
+  html+='</div>';
+  el.innerHTML=html;
+}
+
+// ── WORKOUT LOGGER ──
+let _woDay=null;
+function renderWorkoutTab(el){
+  const start=getStartDate();
+  if(!start){el.innerHTML='<div class="card">Set up your program first.</div>';return;}
+  const dayNum=getDayNum();
+  if(_woDay===null)_woDay=Math.max(0,Math.min(dayNum,90));
+
+  const woKey=getWorkoutForDay(_woDay);
+  const workouts=woKey?parseWorkoutKey(woKey):[];
+  const week=getWeekForDay(_woDay);
+  const phase=getPhaseForWeek(week);
+  const done=STATE.schedule['day_'+_woDay]?.done;
+
+  let dayOptions='';
+  for(let d=0;d<=90;d++){
+    const wk=getWorkoutForDay(d);
+    const wos=wk?parseWorkoutKey(wk):[];
+    const label=`Day ${d+1} (W${getWeekForDay(d)}) — ${wos.map(w=>w.name).join(' + ')}`;
+    dayOptions+=`<option value="${d}" ${d===_woDay?'selected':''}>${label}</option>`;
+  }
+
+  let html=`<div class="card"><div class="form-row">
+    <div class="form-group"><label>Select Day</label><select id="wo_day_select" onchange="_woDay=parseInt(this.value);render()" style="width:400px">${dayOptions}</select></div>
+  </div></div>`;
+
+  html+=`<div class="card">
+    <div class="wo-header">
+      <div>
+        <div style="font-size:10px;color:${phase.color};font-weight:700">${phase.name} — Week ${week}, Day ${_woDay+1}</div>
+        <div class="wo-name">${workouts.map(w=>w.icon+' '+w.name).join(' + ')}</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        ${!done?`<button onclick="markDayDone(${_woDay});render()">✅ Complete</button>`:'<span style="color:var(--green);font-weight:700;font-size:14px">✅ Completed</span>'}
+      </div>
+    </div>`;
+
+  // Render exercises for each workout
+  workouts.forEach(wo=>{
+    if(!wo.exercises||!wo.exercises.length){
+      html+=`<div class="completion-check"><input type="checkbox" ${done?'checked':''} onchange="markDayDone(${_woDay});render()"><span>${wo.icon} ${wo.name} — Check off when completed</span></div>`;
+      return;
+    }
+    const storeKey='wo_'+wo.key+'_w'+week;
+    const stored=STATE.workouts[storeKey]||{exercises:{}};
+    html+=`<div style="margin-top:16px;margin-bottom:8px;font-size:12px;font-weight:700;color:var(--cyan)">${wo.icon} ${wo.name}</div>`;
+    html+=`<table class="ex-table"><thead><tr><th>#</th><th>Exercise</th>`;
+
+    // Determine columns based on exercise types
+    const hasWeight=wo.exercises.some(e=>['rw','lrw','strip'].includes(e.type));
+    const hasPullup=wo.exercises.some(e=>e.type==='pullup');
+    const hasPushup=wo.exercises.some(e=>e.type==='pushup');
+    const hasLR=wo.exercises.some(e=>['lr','lrw'].includes(e.type));
+    const hasTime=wo.exercises.some(e=>e.type==='time');
+
+    html+=`<th>Set 1</th>`;
+    if(hasWeight||hasPullup||hasPushup||hasLR||hasTime)html+=`<th>Detail</th>`;
+    html+=`<th>Set 2</th>`;
+    if(hasWeight||hasPullup||hasPushup||hasLR||hasTime)html+=`<th>Detail</th>`;
+    html+=`<th>Notes</th></tr></thead><tbody>`;
+
+    wo.exercises.forEach((ex,i)=>{
+      const ek='e'+i;
+      const ed=stored.exercises[ek]||{};
+      const bonusTag=ex.bonus?'<span style="color:var(--purple);font-size:8px;font-weight:700"> BONUS</span>':'';
+      html+=`<tr><td class="ex-num">${String(i+1).padStart(2,'0')}</td><td class="ex-name">${ex.n}${bonusTag}</td>`;
+
+      if(ex.type==='r'){
+        html+=`<td><input class="ex-input" type="number" placeholder="Reps" value="${ed.r1||''}" onchange="saveEx('${storeKey}','${ek}','r1',this.value)"></td>`;
+        if(hasWeight||hasPullup||hasPushup||hasLR||hasTime)html+=`<td></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Reps" value="${ed.r2||''}" onchange="saveEx('${storeKey}','${ek}','r2',this.value)"></td>`;
+        if(hasWeight||hasPullup||hasPushup||hasLR||hasTime)html+=`<td></td>`;
+      } else if(ex.type==='rw'){
+        html+=`<td><input class="ex-input" type="number" placeholder="Reps" value="${ed.r1||''}" onchange="saveEx('${storeKey}','${ek}','r1',this.value)"></td>`;
+        html+=`<td><input class="ex-input weight" type="number" placeholder="lbs" value="${ed.w1||''}" onchange="saveEx('${storeKey}','${ek}','w1',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Reps" value="${ed.r2||''}" onchange="saveEx('${storeKey}','${ek}','r2',this.value)"></td>`;
+        html+=`<td><input class="ex-input weight" type="number" placeholder="lbs" value="${ed.w2||''}" onchange="saveEx('${storeKey}','${ek}','w2',this.value)"></td>`;
+      } else if(ex.type==='pushup'){
+        html+=`<td><input class="ex-input" type="number" placeholder="Normal" value="${ed.n1||''}" onchange="saveEx('${storeKey}','${ek}','n1',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Knee" value="${ed.k1||''}" onchange="saveEx('${storeKey}','${ek}','k1',this.value)" style="opacity:.7"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Normal" value="${ed.n2||''}" onchange="saveEx('${storeKey}','${ek}','n2',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Knee" value="${ed.k2||''}" onchange="saveEx('${storeKey}','${ek}','k2',this.value)" style="opacity:.7"></td>`;
+      } else if(ex.type==='pullup'){
+        html+=`<td><input class="ex-input" type="number" placeholder="Unassist" value="${ed.nc1||''}" onchange="saveEx('${storeKey}','${ek}','nc1',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Assist" value="${ed.c1||''}" onchange="saveEx('${storeKey}','${ek}','c1',this.value)" style="opacity:.7"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Unassist" value="${ed.nc2||''}" onchange="saveEx('${storeKey}','${ek}','nc2',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Assist" value="${ed.c2||''}" onchange="saveEx('${storeKey}','${ek}','c2',this.value)" style="opacity:.7"></td>`;
+      } else if(ex.type==='lr'){
+        html+=`<td><input class="ex-input" type="number" placeholder="Right" value="${ed.rl||''}" onchange="saveEx('${storeKey}','${ek}','rl',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Left" value="${ed.ll||''}" onchange="saveEx('${storeKey}','${ek}','ll',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Right" value="${ed.rl2||''}" onchange="saveEx('${storeKey}','${ek}','rl2',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Left" value="${ed.ll2||''}" onchange="saveEx('${storeKey}','${ek}','ll2',this.value)"></td>`;
+      } else if(ex.type==='lrw'){
+        html+=`<td><input class="ex-input" type="number" placeholder="R reps" value="${ed.rl||''}" onchange="saveEx('${storeKey}','${ek}','rl',this.value)"></td>`;
+        html+=`<td><input class="ex-input weight" type="number" placeholder="lbs" value="${ed.w1||''}" onchange="saveEx('${storeKey}','${ek}','w1',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="L reps" value="${ed.ll||''}" onchange="saveEx('${storeKey}','${ek}','ll',this.value)"></td>`;
+        html+=`<td><input class="ex-input weight" type="number" placeholder="lbs" value="${ed.w2||''}" onchange="saveEx('${storeKey}','${ek}','w2',this.value)"></td>`;
+      } else if(ex.type==='time'){
+        html+=`<td><input class="ex-input" type="number" placeholder="Sec" value="${ed.t1||''}" onchange="saveEx('${storeKey}','${ek}','t1',this.value)"></td>`;
+        if(hasWeight||hasPullup||hasPushup||hasLR||hasTime)html+=`<td></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="Sec" value="${ed.t2||''}" onchange="saveEx('${storeKey}','${ek}','t2',this.value)"></td>`;
+        if(hasWeight||hasPullup||hasPushup||hasLR||hasTime)html+=`<td></td>`;
+      } else if(ex.type==='strip'){
+        html+=`<td><input class="ex-input" type="number" placeholder="R1" value="${ed.r1||''}" onchange="saveEx('${storeKey}','${ek}','r1',this.value)"></td>`;
+        html+=`<td><input class="ex-input weight" type="number" placeholder="W1" value="${ed.w1||''}" onchange="saveEx('${storeKey}','${ek}','w1',this.value)"></td>`;
+        html+=`<td><input class="ex-input" type="number" placeholder="R2" value="${ed.r2||''}" onchange="saveEx('${storeKey}','${ek}','r2',this.value)"></td>`;
+        html+=`<td><input class="ex-input weight" type="number" placeholder="W2" value="${ed.w2||''}" onchange="saveEx('${storeKey}','${ek}','w2',this.value)"></td>`;
+      }
+      html+=`<td><input class="ex-input" style="width:100px" placeholder="Notes" value="${ed.note||''}" onchange="saveEx('${storeKey}','${ek}','note',this.value)"></td>`;
+      html+=`</tr>`;
+    });
+    html+=`</tbody></table>`;
+  });
+
+  // Workout notes
+  const dayNotes=STATE.schedule['day_'+_woDay]?.notes||'';
+  html+=`<div style="margin-top:16px"><label>Session Notes</label><textarea style="width:100%;height:60px" onchange="saveDayNote(${_woDay},this.value)">${dayNotes}</textarea></div>`;
+  html+=`</div>`;
+  el.innerHTML=html;
+}
+
+function saveEx(storeKey,ek,field,val){
+  if(!STATE.workouts[storeKey])STATE.workouts[storeKey]={exercises:{}};
+  if(!STATE.workouts[storeKey].exercises[ek])STATE.workouts[storeKey].exercises[ek]={};
+  STATE.workouts[storeKey].exercises[ek][field]=val;save();
+}
+function saveDayNote(d,val){
+  if(!STATE.schedule['day_'+d])STATE.schedule['day_'+d]={};
+  STATE.schedule['day_'+d].notes=val;save();
+}
+
+// ── BODY TRACKER ──
+function renderBody(el){
+  let html=`<div class="card"><div class="card-title">📏 Body Measurements & Weight</div>
+    <div style="color:var(--muted);font-size:11px;margin-bottom:16px">Track weekly to see your transformation. Measurements in inches, weight in lbs.</div>`;
+
+  const weeks=['Start','W2','W3','W4','W5','W6','W7','W8','W9','W10','W11','W12','W13','Final'];
+  html+=`<div class="meas-grid" style="grid-template-columns:140px repeat(${weeks.length},minmax(65px,1fr))">`;
+  // Header
+  html+=`<div class="meas-cell header"></div>`;
+  weeks.forEach(w=>{html+=`<div class="meas-cell header">${w}</div>`;});
+
+  // Weight row
+  html+=`<div class="meas-cell label">⚖️ Weight (lbs)</div>`;
+  weeks.forEach((w,i)=>{
+    const key='week_'+(i===0?'start':i===weeks.length-1?'final':i+1);
+    const val=STATE.body[key]?.weight||'';
+    html+=`<div class="meas-cell"><input type="number" value="${val}" onchange="saveBody('${key}','weight',this.value)"></div>`;
+  });
+
+  // Body fat row
+  html+=`<div class="meas-cell label">📊 Body Fat %</div>`;
+  weeks.forEach((w,i)=>{
+    const key='week_'+(i===0?'start':i===weeks.length-1?'final':i+1);
+    const val=STATE.body[key]?.bodyFat||'';
+    html+=`<div class="meas-cell"><input type="number" step="0.1" value="${val}" onchange="saveBody('${key}','bodyFat',this.value)"></div>`;
+  });
+
+  // Measurement rows
+  MEASUREMENTS.forEach(m=>{
+    html+=`<div class="meas-cell label">📐 ${m}</div>`;
+    weeks.forEach((w,i)=>{
+      const key='week_'+(i===0?'start':i===weeks.length-1?'final':i+1);
+      const val=STATE.body[key]?.measurements?.[m]||'';
+      html+=`<div class="meas-cell"><input type="number" step="0.1" value="${val}" onchange="saveBodyMeas('${key}','${m}',this.value)"></div>`;
+    });
+  });
+
+  html+=`</div></div>`;
+
+  // Quick weight chart
+  html+=`<div class="card"><div class="card-title">📈 Weight Trend</div>`;
+  html+=renderWeightChart();
+  html+=`</div>`;
+
+  el.innerHTML=html;
+}
+
+function saveBody(weekKey,field,val){
+  if(!STATE.body[weekKey])STATE.body[weekKey]={};
+  STATE.body[weekKey][field]=val?parseFloat(val):'';save();
+}
+function saveBodyMeas(weekKey,meas,val){
+  if(!STATE.body[weekKey])STATE.body[weekKey]={};
+  if(!STATE.body[weekKey].measurements)STATE.body[weekKey].measurements={};
+  STATE.body[weekKey].measurements[meas]=val?parseFloat(val):'';save();
+}
+
+function renderWeightChart(){
+  const points=[];
+  const weeks=['start',2,3,4,5,6,7,8,9,10,11,12,13,'final'];
+  weeks.forEach((w,i)=>{
+    const key='week_'+(w==='start'||w==='final'?w:w);
+    const v=STATE.body[key]?.weight;
+    if(v)points.push({x:i,y:v,label:w==='start'?'Start':w==='final'?'Final':'W'+w});
+  });
+  if(points.length<2)return '<div style="color:var(--muted);font-size:11px;padding:20px;text-align:center">Enter weight for at least 2 weeks to see chart</div>';
+
+  const W=600,H=200,pad=40;
+  const minY=Math.min(...points.map(p=>p.y))-5;
+  const maxY=Math.max(...points.map(p=>p.y))+5;
+  const xScale=(W-pad*2)/(weeks.length-1);
+  const yScale=(H-pad*2)/(maxY-minY);
+
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px">`;
+  // Grid
+  for(let i=0;i<5;i++){
+    const y=pad+i*(H-pad*2)/4;
+    const v=maxY-(i*(maxY-minY)/4);
+    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="0.5"/>`;
+    svg+=`<text x="${pad-4}" y="${y+4}" text-anchor="end" fill="var(--muted)" font-size="9">${v.toFixed(0)}</text>`;
+  }
+  // Line
+  let path='';
+  points.forEach((p,i)=>{
+    const x=pad+p.x*xScale;
+    const y=H-pad-(p.y-minY)*yScale;
+    path+=(i===0?'M':'L')+x+','+y;
+  });
+  svg+=`<path d="${path}" fill="none" stroke="var(--cyan)" stroke-width="2.5"/>`;
+  // Points
+  points.forEach(p=>{
+    const x=pad+p.x*xScale;
+    const y=H-pad-(p.y-minY)*yScale;
+    svg+=`<circle cx="${x}" cy="${y}" r="4" fill="var(--cyan)"/>`;
+    svg+=`<text x="${x}" y="${y-10}" text-anchor="middle" fill="var(--fg)" font-size="9" font-weight="700">${p.y}</text>`;
+    svg+=`<text x="${x}" y="${H-5}" text-anchor="middle" fill="var(--muted)" font-size="8">${p.label}</text>`;
+  });
+  svg+=`</svg>`;
+  return svg;
+}
+
+// ── FIT TEST ──
+function renderFitTest(el){
+  let html=`<div class="card"><div class="card-title">🏆 P90X Fit Test</div>
+    <div style="color:var(--muted);font-size:11px;margin-bottom:16px">Complete before Day 1 and after Day 90 to measure your transformation.</div>
+    <div class="grid2">
+      <div class="card" style="border-color:var(--orange)"><div style="font-size:13px;font-weight:700;color:var(--orange);margin-bottom:12px">📋 BEFORE (Day 0)</div>`;
+  FIT_TESTS.forEach(t=>{
+    const val=STATE.fitTest.before?.[t.n]||'';
+    html+=`<div class="form-row"><div class="form-group" style="flex:1"><label>${t.n} (${t.unit})</label>
+      <input type="number" value="${val}" onchange="saveFitTest('before','${t.n}',this.value)" style="width:100%"></div></div>`;
+  });
+  html+=`</div><div class="card" style="border-color:var(--green)"><div style="font-size:13px;font-weight:700;color:var(--green);margin-bottom:12px">🎯 AFTER (Day 90)</div>`;
+  FIT_TESTS.forEach(t=>{
+    const val=STATE.fitTest.after?.[t.n]||'';
+    const bval=STATE.fitTest.before?.[t.n];
+    let delta='';
+    if(bval&&val){
+      const d=parseFloat(val)-parseFloat(bval);
+      const better=(t.n.includes('Heart Rate'))?d<0:d>0;
+      delta=`<span style="color:${better?'var(--green)':'var(--red)'};font-size:10px">${d>0?'+':''}${d}</span>`;
+    }
+    html+=`<div class="form-row"><div class="form-group" style="flex:1"><label>${t.n} (${t.unit}) ${delta}</label>
+      <input type="number" value="${val}" onchange="saveFitTest('after','${t.n}',this.value)" style="width:100%"></div></div>`;
+  });
+  html+=`</div></div></div>`;
+
+  // Comparison chart
+  const hasBoth=FIT_TESTS.some(t=>STATE.fitTest.before?.[t.n]&&STATE.fitTest.after?.[t.n]);
+  if(hasBoth){
+    html+=`<div class="card"><div class="card-title">📊 Before vs After</div>`;
+    html+=`<div style="display:flex;gap:8px;flex-wrap:wrap">`;
+    FIT_TESTS.forEach(t=>{
+      const b=parseFloat(STATE.fitTest.before?.[t.n]);
+      const a=parseFloat(STATE.fitTest.after?.[t.n]);
+      if(!b&&!a)return;
+      const d=a-b;
+      const better=(t.n.includes('Heart Rate'))?d<0:d>0;
+      html+=`<div style="background:var(--bg3);border-radius:6px;padding:12px;min-width:130px;text-align:center;border:1px solid ${better?'var(--green)':'var(--red)'}">
+        <div style="font-size:9px;color:var(--muted);margin-bottom:4px">${t.n}</div>
+        <div style="font-size:18px;font-weight:800;color:${better?'var(--green)':'var(--red)'}">${d>0?'+':''}${d.toFixed(0)}</div>
+        <div style="font-size:9px;color:var(--muted)">${b||'—'} → ${a||'—'} ${t.unit}</div>
+      </div>`;
+    });
+    html+=`</div></div>`;
+  }
+  el.innerHTML=html;
+}
+function saveFitTest(phase,name,val){
+  if(!STATE.fitTest[phase])STATE.fitTest[phase]={};
+  STATE.fitTest[phase][name]=val;save();
+}
+
+// ── NUTRITION ──
+function renderNutrition(el){
+  const dayNum=getDayNum();
+  const week=Math.min(Math.max(getWeekForDay(dayNum),1),13);
+  const nPhase=getNutritionPhase(week);
+  const level=NUTRITION_LEVELS[STATE.setup.nutritionLevel||2];
+
+  let html=`<div class="card">
+    <div class="card-title">🍽️ Nutrition — ${nPhase.name}</div>
+    <div style="color:var(--muted);font-size:11px;margin-bottom:12px">${nPhase.desc}</div>
+    <div style="display:flex;gap:20px;margin-bottom:16px;flex-wrap:wrap">
+      <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--phase1)">${(nPhase.protein*100).toFixed(0)}%</div><div style="font-size:9px;color:var(--muted)">PROTEIN</div></div>
+      <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--phase2)">${(nPhase.carbs*100).toFixed(0)}%</div><div style="font-size:9px;color:var(--muted)">CARBS</div></div>
+      <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--phase3)">${(nPhase.fat*100).toFixed(0)}%</div><div style="font-size:9px;color:var(--muted)">FAT</div></div>
+      <div style="text-align:center"><div style="font-size:22px;font-weight:800;color:var(--cyan)">${level.cal}</div><div style="font-size:9px;color:var(--muted)">DAILY CALORIES</div></div>
+    </div>
+  </div>`;
+
+  // Daily portion tracker
+  const todayKey='nut_w'+week+'_d'+(dayNum%7);
+  const todayNut=STATE.nutrition[todayKey]||{};
+
+  html+=`<div class="card"><div class="card-title">📦 Today's Portions (Level ${STATE.setup.nutritionLevel||2})</div>
+    <div class="portion-grid">`;
+  Object.entries(level.portions).forEach(([cat,target])=>{
+    const actual=todayNut[cat]||0;
+    const icon=PORTION_ICONS[cat]||'🔘';
+    const pct=target>0?Math.min((actual/target)*100,100):0;
+    const col=pct>=100?'var(--green)':pct>=50?'var(--orange)':'var(--red)';
+    html+=`<div class="portion-card">
+      <div class="p-icon">${icon}</div>
+      <div class="p-name">${cat}</div>
+      <div class="p-target">${target}</div>
+      <div class="p-actual"><input type="number" min="0" value="${actual}" onchange="saveNutrition('${todayKey}','${cat}',this.value)" style="color:${col}"></div>
+      <div style="height:4px;background:var(--border);border-radius:2px;margin-top:6px"><div style="height:100%;width:${pct}%;background:${col};border-radius:2px;transition:width .3s"></div></div>
+    </div>`;
+  });
+  html+=`</div></div>`;
+
+  // Phase overview
+  html+=`<div class="card"><div class="card-title">📋 Nutrition Phases</div><div class="grid3">`;
+  NUTRITION_PHASES.forEach((p,i)=>{
+    const active=p===nPhase;
+    html+=`<div style="background:var(--bg3);border-radius:6px;padding:14px;border:2px solid ${active?'var(--cyan)':'var(--border)'}">
+      <div style="font-size:13px;font-weight:700;color:${active?'var(--cyan)':'var(--fg)'}">${p.name}</div>
+      <div style="font-size:10px;color:var(--muted);margin:6px 0">Weeks ${p.weeks[0]}-${p.weeks[p.weeks.length-1]}</div>
+      <div style="font-size:10px;color:var(--muted)">${p.desc}</div>
+      <div style="margin-top:8px;display:flex;gap:8px">
+        <span style="font-size:11px;font-weight:700;color:var(--phase1)">${(p.protein*100)}% P</span>
+        <span style="font-size:11px;font-weight:700;color:var(--phase2)">${(p.carbs*100)}% C</span>
+        <span style="font-size:11px;font-weight:700;color:var(--phase3)">${(p.fat*100)}% F</span>
+      </div>
+    </div>`;
+  });
+  html+=`</div></div>`;
+
+  // Portion reference
+  html+=`<div class="card"><div class="card-title">📖 Portion Approach Reference</div>
+    <div class="grid2">
+      <div><strong style="color:var(--phase1)">🥩 Protein</strong> (100 cal/serving)<br><span style="font-size:10px;color:var(--muted)">3 oz chicken/turkey breast, 6 egg whites, 3 oz fish, 4 oz tofu, 1 cup nonfat yogurt</span></div>
+      <div><strong style="color:var(--orange)">🧀 Dairy</strong> (120 cal/serving)<br><span style="font-size:10px;color:var(--muted)">1.5 oz low-fat cheese, 1 cup 1% milk, 1 oz cottage cheese</span></div>
+      <div><strong style="color:var(--green)">🍎 Fruit</strong> (100 cal/serving)<br><span style="font-size:10px;color:var(--muted)">1 medium apple/banana/orange, 1 cup berries/melon</span></div>
+      <div><strong style="color:var(--t1)">🥦 Vegetable</strong> (50 cal/serving)<br><span style="font-size:10px;color:var(--muted)">1 cup cooked: broccoli, asparagus, spinach, peppers</span></div>
+      <div><strong style="color:var(--yellow)">🥑 Fat</strong> (120 cal/tbsp)<br><span style="font-size:10px;color:var(--muted)">Avocado (3oz), olive oil, canola oil, almonds (12)</span></div>
+      <div><strong style="color:var(--phase2)">🍞 Carb</strong> (200 cal/serving)<br><span style="font-size:10px;color:var(--muted)">1 whole wheat bagel, 1 cup baked beans, 2 slices bread</span></div>
+      <div><strong style="color:var(--purple)">🍫 Snack</strong> (100 cal/serving)<br><span style="font-size:10px;color:var(--muted)">1 oz low-fat cheese, 1 protein bar, 2 tbsp hummus + veggies</span></div>
+      <div><strong style="color:var(--muted)">🧂 Condiment</strong> (50 cal/2tbsp)<br><span style="font-size:10px;color:var(--muted)">Low-fat sauces, marinades, fat-free dressings</span></div>
+    </div>
+  </div>`;
+
+  el.innerHTML=html;
+}
+function saveNutrition(key,cat,val){
+  if(!STATE.nutrition[key])STATE.nutrition[key]={};
+  STATE.nutrition[key][cat]=parseInt(val)||0;save();
+}
+
+// ── ANALYTICS ──
+function renderAnalytics(el){
+  let html='';
+
+  // Workout completion by week
+  html+=`<div class="card"><div class="card-title">📊 Weekly Completion Rate</div>`;
+  const W=700,H=200,pad=40;
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%">`;
+  const barW=(W-pad*2)/13-4;
+  for(let w=1;w<=13;w++){
+    let done=0,total=7;
+    for(let d=0;d<7;d++){
+      if(STATE.schedule['day_'+((w-1)*7+d)]?.done)done++;
+    }
+    const pct=done/total;
+    const bh=pct*(H-pad*2);
+    const x=pad+(w-1)*(barW+4);
+    const y=H-pad-bh;
+    const phase=getPhaseForWeek(w);
+    svg+=`<rect x="${x}" y="${y}" width="${barW}" height="${bh}" fill="${phase.color}" rx="3" opacity="0.8"/>`;
+    svg+=`<text x="${x+barW/2}" y="${H-5}" text-anchor="middle" fill="var(--muted)" font-size="9">W${w}</text>`;
+    if(done>0)svg+=`<text x="${x+barW/2}" y="${y-5}" text-anchor="middle" fill="var(--fg)" font-size="9" font-weight="700">${done}/7</text>`;
+  }
+  // Y axis
+  for(let i=0;i<=4;i++){
+    const y=pad+i*(H-pad*2)/4;
+    const v=Math.round(100-i*25);
+    svg+=`<line x1="${pad}" y1="${y}" x2="${W-pad}" y2="${y}" stroke="var(--border)" stroke-width="0.5"/>`;
+    svg+=`<text x="${pad-4}" y="${y+4}" text-anchor="end" fill="var(--muted)" font-size="9">${v}%</text>`;
+  }
+  svg+=`</svg>`;
+  html+=svg+`</div>`;
+
+  // Weight chart
+  html+=`<div class="card"><div class="card-title">⚖️ Weight Progress</div>${renderWeightChart()}</div>`;
+
+  // Exercise progress charts — find exercises with data across multiple weeks
+  html+=`<div class="card"><div class="card-title">💪 Exercise Progress</div>`;
+  const exProgress={};
+  Object.entries(STATE.workouts).forEach(([key,data])=>{
+    const m=key.match(/wo_(.+)_w(\d+)/);
+    if(!m)return;
+    const woType=m[1],week=parseInt(m[2]);
+    Object.entries(data.exercises||{}).forEach(([ek,ed])=>{
+      const wo=WORKOUT_TYPES[woType];
+      if(!wo)return;
+      const idx=parseInt(ek.replace('e',''));
+      const ex=wo.exercises[idx];
+      if(!ex)return;
+      const v=parseFloat(ed.r1||ed.n1||ed.nc1||ed.rl||ed.t1)||0;
+      if(v<=0)return;
+      const label=ex.n;
+      if(!exProgress[label])exProgress[label]=[];
+      exProgress[label].push({week,value:v,weight:parseFloat(ed.w1)||0});
+    });
+  });
+
+  const exKeys=Object.keys(exProgress).filter(k=>exProgress[k].length>=2).slice(0,6);
+  if(exKeys.length){
+    html+=`<div class="grid2">`;
+    exKeys.forEach(name=>{
+      const pts=exProgress[name].sort((a,b)=>a.week-b.week);
+      const maxV=Math.max(...pts.map(p=>p.value));
+      const cW=300,cH=120,cPad=30;
+      let s=`<div class="chart-wrap"><div class="chart-title">${name}</div><svg viewBox="0 0 ${cW} ${cH}" style="width:100%">`;
+      const xSc=(cW-cPad*2)/(pts.length-1||1);
+      let path='';
+      pts.forEach((p,i)=>{
+        const x=cPad+i*xSc;
+        const y=cH-cPad-(p.value/maxV)*(cH-cPad*2);
+        path+=(i===0?'M':'L')+x+','+y;
+        s+=`<circle cx="${x}" cy="${y}" r="3" fill="var(--cyan)"/>`;
+        s+=`<text x="${x}" y="${y-8}" text-anchor="middle" fill="var(--fg)" font-size="8" font-weight="700">${p.value}${p.weight?' @'+p.weight+'lb':''}</text>`;
+        s+=`<text x="${x}" y="${cH-5}" text-anchor="middle" fill="var(--muted)" font-size="8">W${p.week}</text>`;
+      });
+      s+=`<path d="${path}" fill="none" stroke="var(--cyan)" stroke-width="2"/>`;
+      s+=`</svg></div>`;
+      html+=s;
+    });
+    html+=`</div>`;
+  } else {
+    html+=`<div style="color:var(--muted);text-align:center;padding:20px">Log exercises across multiple weeks to see progress charts</div>`;
+  }
+  html+=`</div>`;
+
+  // Workout type distribution
+  html+=`<div class="card"><div class="card-title">🎯 Workout Distribution</div>`;
+  const typeCounts={};
+  for(let d=0;d<91;d++){
+    const sk=STATE.schedule['day_'+d];
+    if(!sk?.done)continue;
+    const wk=getWorkoutForDay(d);
+    if(!wk||wk==='rest')continue;
+    parseWorkoutKey(wk).forEach(w=>{
+      typeCounts[w.name]=(typeCounts[w.name]||0)+1;
+    });
+  }
+  const tcEntries=Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]);
+  if(tcEntries.length){
+    const maxC=Math.max(...tcEntries.map(e=>e[1]));
+    html+=`<div style="display:flex;flex-direction:column;gap:6px">`;
+    tcEntries.forEach(([name,count])=>{
+      const pct=(count/maxC)*100;
+      html+=`<div style="display:flex;align-items:center;gap:8px">
+        <div style="width:200px;font-size:11px;font-weight:600">${name}</div>
+        <div style="flex:1;height:18px;background:var(--border);border-radius:3px"><div style="height:100%;width:${pct}%;background:var(--cyan);border-radius:3px"></div></div>
+        <div style="width:30px;text-align:right;font-size:11px;font-weight:700;color:var(--cyan)">${count}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  } else html+=`<div style="color:var(--muted);text-align:center;padding:20px">Complete workouts to see distribution</div>`;
+  html+=`</div>`;
+
+  el.innerHTML=html;
+}
+
+// ── ARCHIVE ──
+function renderArchive(el){
+  let html=`<div class="card"><div class="card-title">📦 Program Archive</div>
+    <div style="color:var(--muted);font-size:11px;margin-bottom:16px">
+      Archive your current program to start a new one, or export/import data.
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:16px">
+      <button onclick="archiveProgram()">📥 Archive Current Program</button>
+      <button class="btn-blue" onclick="exportData()">💾 Export All Data (JSON)</button>
+      <button class="btn-orange" onclick="document.getElementById('importFile').click()">📂 Import Data</button>
+      <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)">
+      <button class="btn-danger" onclick="resetProgram()">🗑️ Reset Current</button>
+    </div>
+  </div>`;
+
+  // Setup editor
+  if(STATE.setup.startDate){
+    html+=`<div class="card"><div class="card-title">⚙️ Program Settings</div>
+      <div class="form-row">
+        <div class="form-group"><label>Name</label><input id="s_name" value="${STATE.setup.name||''}" style="width:200px"></div>
+        <div class="form-group"><label>Program</label>
+          <select id="s_prog"><option value="classic" ${STATE.setup.program==='classic'?'selected':''}>Classic</option><option value="lean" ${STATE.setup.program==='lean'?'selected':''}>Lean</option><option value="doubles" ${STATE.setup.program==='doubles'?'selected':''}>Doubles</option></select></div>
+        <div class="form-group"><label>Start Date</label><input type="date" id="s_date" value="${STATE.setup.startDate}"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Age</label><input type="number" id="s_age" value="${STATE.setup.age||''}"></div>
+        <div class="form-group"><label>Gender</label><select id="s_gender"><option value="male" ${STATE.setup.gender==='male'?'selected':''}>Male</option><option value="female" ${STATE.setup.gender==='female'?'selected':''}>Female</option></select></div>
+        <div class="form-group"><label>Height (in)</label><input type="number" id="s_height" value="${STATE.setup.height||''}"></div>
+        <div class="form-group"><label>Weight (lbs)</label><input type="number" id="s_weight" value="${STATE.setup.weight||''}"></div>
+        <div class="form-group"><label>Body Fat %</label><input type="number" id="s_bf" value="${STATE.setup.bodyFat||''}"></div>
+        <div class="form-group"><label>Nutrition Level</label>
+          <select id="s_nlevel"><option value="1" ${STATE.setup.nutritionLevel==1?'selected':''}>Level I</option><option value="2" ${STATE.setup.nutritionLevel==2?'selected':''}>Level II</option><option value="3" ${STATE.setup.nutritionLevel==3?'selected':''}>Level III</option></select></div>
+      </div>
+      <button onclick="saveSetup()">💾 Save Settings</button>
+    </div>`;
+  }
+
+  // Archived programs
+  if(STATE.archives&&STATE.archives.length){
+    html+=`<div class="card"><div class="card-title">📂 Archived Programs</div>`;
+    STATE.archives.forEach((arc,i)=>{
+      const comp=arc.schedule?Object.values(arc.schedule).filter(d=>d.done).length:0;
+      html+=`<div class="archive-entry">
+        <div>
+          <div class="a-name">${arc.setup?.name||'Program'} — ${(arc.setup?.program||'classic').toUpperCase()}</div>
+          <div class="a-meta">Started ${arc.setup?.startDate||'?'} · ${comp}/91 days completed · Archived ${arc.archivedAt||'?'}</div>
+        </div>
+        <div class="a-actions">
+          <button class="btn-sm btn-blue" onclick="restoreArchive(${i})">♻️ Restore</button>
+          <button class="btn-sm btn-danger" onclick="deleteArchive(${i})">🗑️</button>
+        </div>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  el.innerHTML=html;
+}
+
+function archiveProgram(){
+  if(!STATE.setup.startDate){toast('Nothing to archive');return;}
+  if(!confirm('Archive current program? This will save it and reset for a new program.'))return;
+  const snapshot=JSON.parse(JSON.stringify(STATE));
+  delete snapshot.archives;
+  snapshot.archivedAt=new Date().toISOString().slice(0,10);
+  if(!STATE.archives)STATE.archives=[];
+  STATE.archives.push(snapshot);
+  // Reset current
+  const archives=STATE.archives;
+  Object.assign(STATE,defaultState());
+  STATE.archives=archives;
+  save();toast('✅ Program archived!');switchTab('dashboard');
+}
+
+function restoreArchive(idx){
+  if(!confirm('Restore this archived program? Current data will be replaced.'))return;
+  const arc=STATE.archives[idx];
+  const archives=[...STATE.archives];
+  archives.splice(idx,1);
+  // Archive current first if it has data
+  if(STATE.setup.startDate){
+    const snap=JSON.parse(JSON.stringify(STATE));
+    delete snap.archives;
+    snap.archivedAt=new Date().toISOString().slice(0,10);
+    archives.push(snap);
+  }
+  Object.assign(STATE,arc);
+  STATE.archives=archives;
+  save();toast('✅ Restored!');switchTab('dashboard');
+}
+
+function deleteArchive(idx){
+  if(!confirm('Delete this archived program? This cannot be undone.'))return;
+  STATE.archives.splice(idx,1);save();render();toast('Deleted');
+}
+
+function exportData(){
+  const blob=new Blob([JSON.stringify(STATE,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='p90x-data-'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();URL.revokeObjectURL(url);toast('💾 Exported!');
+}
+
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.setup){toast('Invalid P90X data file');return;}
+      if(!confirm('Import will replace all current data. Continue?'))return;
+      Object.assign(STATE,data);save();toast('✅ Imported!');render();
+    }catch(err){toast('Error: '+err.message);}
+  };
+  reader.readAsText(file);
+}
+
+function resetProgram(){
+  if(!confirm('⚠️ This will erase all current data. Archive first if you want to keep it. Continue?'))return;
+  const archives=STATE.archives||[];
+  Object.assign(STATE,defaultState());
+  STATE.archives=archives;
+  save();toast('Reset complete');switchTab('dashboard');
+}
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>
